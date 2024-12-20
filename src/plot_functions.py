@@ -3,57 +3,80 @@ from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 import numpy as np
 
-def plot_sum_waveform(wvf, cwf, n_time_bins, label="Waveform",
-                      twvf="Sum Raw Waveform", tcwf="Sum Deconv Waveform",
+def plot_adc_to_pes(axs):
+    adc_to_pes = get_adc_to_pes()
+    print(adc_to_pes)
+    axs.hist(adc_to_pes, bins=20, color='blue', edgecolor='black', alpha=0.7)
+    axs.set_xlabel('ADC to PES')
+    axs.set_ylabel('Frequency')
+    axs.set_title('ADC to PES for NEXT-100')
+
+
+def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_number,
+                      s1tmx = 2600, s1tmn=0, s2tmx = 2600, s2tmn=0,
                       figsize=(18, 6), tbin=25e-3): 
     """
-    Plots the raw and deconv sum waveforms. Time in ns
+    Plots the sum of the waveforms (calibrated) for SiPMs and PMTs. 
+    Time in mus (thus multiplity the time of PMTs by 25 10^3, or 25 ns)
     """
+
+    label=f"evt={event_number} run={run_number}"
+    timesi = np.linspace(0, n_timesi_bins, n_timesi_bins)
     time = np.linspace(0, n_time_bins * tbin, n_time_bins)  
-    
+
     fig, axs = plt.subplots(1, 2, figsize=figsize)
-    axs[0].plot(time, wvf, label=label, color="blue")
-    axs[0].set_title(twvf)
+    
+    axs[0].plot(timesi, siwf, label=label, color="blue")
+    axs[0].set_title("Calibrated Sum SiPM")
     axs[0].set_xlabel("Time [μs]")
     axs[0].set_ylabel("Amplitude")
+    axs[0].axvline(s1tmn, color='yellow', linestyle='--', linewidth=2)
+    axs[0].axvline(s1tmx, color='yellow', linestyle='--', linewidth=2)
+    axs[0].axvline(s2tmn, color='green', linestyle='--', linewidth=2)
+    axs[0].axvline(s2tmx, color='green', linestyle='--', linewidth=2)
     #axs[0].set_yscale('log')
     axs[0].grid(True)
     axs[0].legend()
     axs[1].plot(time, cwf, label=label, color="red")
-    axs[1].set_title(tcwf)
+    axs[1].axvline(s1tmn, color='yellow', linestyle='--', linewidth=2)
+    axs[1].axvline(s1tmx, color='yellow', linestyle='--', linewidth=2)
+    axs[1].axvline(s2tmn, color='green', linestyle='--', linewidth=2)
+    axs[1].axvline(s2tmx, color='green', linestyle='--', linewidth=2)
+    axs[1].set_title("Calibrated Sum PMT")
     axs[1].set_xlabel("Time [μs]")
     axs[1].set_ylabel("Amplitude")
     #axs[0].set_yscale('log')
     axs[1].grid(True)
     axs[1].legend()
-
-
-def plot_waveform(wvf, n_time_bins, peaks=None, window= 20, label="Waveform", 
-                  log=False, figsize=(18, 6), tbin=25e-3): 
+    fig.tight_layout()
+    
+    
+def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[], left_ips=[], right_ips=[], 
+                  figsize=(18, 6), tbin=25e-3): 
+    
     """
     Plot a waveform. Optionaly mark the position of peaks
     
     """
-    
+    label=f"evt={event_number} run={run_number}"
     fig, axs = plt.subplots(1, 1, figsize=figsize)
     time = np.linspace(0, n_time_bins * tbin, n_time_bins)  
     axs.plot(time, wvf, label=label, color="blue")
+    
+    for i, pk in enumerate(peaks):
+        lcut = tbin * (left_ips[i] -  1 * widths[i])
+        rcut = tbin * (right_ips[i] +  2 * widths[i])
+        print(f"left cut = {lcut}, right cut = {rcut}")
+        axs.axvline(lcut, color='red', linestyle='--', linewidth=2)
+        axs.axvline(rcut, color='red', linestyle='--', linewidth=2)
 
-    if len(peaks)>0:
-        tmin = [(pk - window)*tbin for pk in peaks]
-        tmax = [(pk + window)*tbin for pk in peaks]
-        for i in range(len(tmin)):
-            axs.axvline(tmin[i], color='red', linestyle='--', linewidth=2)
-        for i in range(len(tmax)):
-            axs.axvline(tmax[i], color='red', linestyle='--', linewidth=2)
     axs.set_title("Waveform")
     axs.set_xlabel("Time [μs]")
     axs.set_ylabel("Amplitude")
-    if log:
-        axs.set_yscale('log')
+   
     axs.grid(True)
     axs.legend()
-    
+
     
 def plot_waveform_pmts(wvflist, n_time_bins, tbin=25e-3): 
     """
@@ -82,63 +105,100 @@ def plot_waveform_pmts(wvflist, n_time_bins, tbin=25e-3):
 
     ###plt.tight_layout()
     
-
-
-def plot_waveform_zoom_peak(wvf, tpeak, twindow, label="Waveform",
-                            log=False, figsize=(18, 6), tbin=25e-3, tscale=False): 
+def plot_waveform_zoom_peak(wvf, tpeak, tleft, tright, twindow, run_number, event_number,
+                            figsize=(18, 6), tbin=25e-3, tscale=False): 
     """
     Plot a waveform between tmin and tamx.  Time in ns
     """
-    tmin = tpeak-twindow
-    tmax = tpeak+twindow
+    tmin = tpeak - twindow
+    tmax = tpeak + twindow
     time = np.linspace(tmin, tmax, num=2*twindow)
-    #print(tmin, tmax, time.shape)
-    #print(wvf.shape, wvf[tmin:tmax].shape)
+    
+    label=f"evt={event_number} run={run_number}"
 
     fig, axs = plt.subplots(1, 1, figsize=figsize)
     if tscale:
         axs.plot(time * tbin, wvf[tmin:tmax], label=label, color="blue")
+        axs.axvline(tleft * tbin, color='red', linestyle='--', linewidth=2)
+        axs.axvline(tright * tbin, color='red', linestyle='--', linewidth=2)
+        axs.set_xlabel("Time [μs]")
     else:
         axs.plot(time, wvf[tmin:tmax], label=label, color="blue")
+        axs.axvline(tleft, color='red', linestyle='--', linewidth=2)
+        axs.axvline(tright, color='red', linestyle='--', linewidth=2)
+        axs.set_xlabel("Time [samples]")
+        
     axs.set_title("Waveform")
-    axs.set_xlabel("Time [μs]")
+    
     axs.set_ylabel("Amplitude")
-    if log:
-        axs.set_yscale('log')
+    
     axs.grid(True)
     axs.legend()
     plt.show()
 
 
-def plot_waveform_zoom_peaks(wvf, tpeak, twindow, label="Waveform",
-                            log=False, figsize=(18, 6), tbin=25e-3, tscale=False): 
+def plot_waveform_zoom_peaks(wvf, run_number, event_number, tpeaks, tlefts, trights, twindows, 
+                            figsize=(18, 6), tbin=25e-3, tscale=False): 
     """
     Plot a waveform between tmin and tamx.  Time in ns
     """
     
-    fig, axs = plt.subplots(1, len(tpeak), figsize=figsize)
-    
-    for i in range(len(tpeak)):
-        tmin = tpeak[i]-twindow[i]
-        tmax = tpeak[i] + twindow[i]
-        time = np.linspace(tmin, tmax, num=2*twindow[i])
-        #print(tmin, tmax, time.shape)
-        #print(wvf.shape, wvf[tmin:tmax].shape)
+    fig, axs = plt.subplots(1, len(tpeaks), figsize=figsize)
+    label=f"evt={event_number} run={run_number}"
 
+    if len(tpeaks) == 1:
+        tmin = tlefts[0] - twindows[0]
+        tmax = trights[0] + twindows[0]
+        time = np.linspace(tmin, tmax, num=tmax-tmin)
+    
         if tscale:
-            axs[i].plot(time * tbin, wvf[tmin:tmax], label=label, color="blue")
+            axs.plot(time * tbin, wvf[tmin:tmax], label=label, color="blue")
+            axs.axvline(tlefts[0] * tbin, color='red', linestyle='--', linewidth=2)
+            axs.axvline(trights[0] * tbin, color='red', linestyle='--', linewidth=2)
+            axs.set_xlabel("Time [μs]")
+            axs.set_ylabel("Amplitude")
+            axs.grid(True)
+            axs.legend()
         else:
-            axs[i].plot(time, wvf[tmin:tmax], label=label, color="blue")
-        axs[i].set_title("Waveform")
-        axs[i].set_xlabel("Time [μs]")
-        axs[i].set_ylabel("Amplitude")
-    
-        axs[i].grid(True)
-        axs[i].legend()
-    
-    plt.tight_layout()
-    plt.show()
+            axs.plot(time, wvf[tmin:tmax], label=label, color="blue")
+            axs.axvline(tlefts[0], color='red', linestyle='--', linewidth=2)
+            axs.axvline(trights[0], color='red', linestyle='--', linewidth=2)
+            axs.set_xlabel("Time [samples]")
+            axs.set_ylabel("Amplitude")
+            axs.grid(True)
+            axs.legend()
+    else:
 
+        for i, tpeak in enumerate(tpeaks):
+            #tmin = tpeak - twindows[i]
+            #tmax = tpeak + twindows[i]
+            tmin = tlefts[i] - twindows[i]
+            tmax = trights[i] + twindows[i]
+            time = np.linspace(tmin, tmax, num=tmax-tmin)
+        
+            if tscale:
+                axs[i].plot(time * tbin, wvf[tmin:tmax], label=label, color="blue")
+                axs[i].axvline(tlefts[i] * tbin, color='red', linestyle='--', linewidth=2)
+                axs[i].axvline(trights[i] * tbin, color='red', linestyle='--', linewidth=2)
+                axs[i].set_xlabel("Time [μs]")
+                axs[i].set_ylabel("Amplitude")
+                axs[i].grid(True)
+                axs[i].legend()
+            else:
+                axs[i].plot(time, wvf[tmin:tmax], label=label, color="blue")
+                axs[i].axvline(tlefts[i], color='red', linestyle='--', linewidth=2)
+                axs[i].axvline(trights[i], color='red', linestyle='--', linewidth=2)
+                axs[i].set_xlabel("Time [samples]")
+                axs[i].set_ylabel("Amplitude")
+                axs[i].grid(True)
+                axs[i].legend()
+
+        #axs.set_title("Waveform")
+       
+        
+    fig.tight_layout()
+        
+    #plt.show()
     
     
 def plot_waveform_right_peak(wvf, tpeak, twindow, label="Waveform",
@@ -296,6 +356,19 @@ def plot_sipm_max_rms(X,Y,qmax, STD, units="adc"):
     plt.show()
 
 
+def plot_sipm(X,Y,qsipm, units="adc", scale=10):
+    fig, axs = plt.subplots(1, 1, figsize=(14, 6),dpi=100)
+
+    scatter = axs.scatter(X, Y, c=qsipm, s=np.array(qsipm)/scale,
+                              cmap='plasma', alpha=0.8, edgecolors='k')
+    axs.set_title("Amp vs SiPM Positions")
+    axs.set_xlabel("X [mm]")
+    axs.set_ylabel("Y [mm]")
+    plt.colorbar(scatter, ax=axs)
+
+    # Adjust layout and display
+    fig.tight_layout()
+    return scatter.get_array()
 
 
 def plot_sum_PMT(df, log=False, offset=500):

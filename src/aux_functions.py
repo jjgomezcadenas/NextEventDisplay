@@ -3,6 +3,17 @@ import tables as tb
 import pandas as pd
 import numpy as np 
 
+from dataclasses import dataclass
+
+@dataclass
+class SensorPars:
+    pmt_time_bins: np.array
+    num_pmts: int
+    sipm_time_bins: np.array
+    num_sipms: int
+
+
+
 def check_folder_exists(run_number, base_path, path_to_wf):
     """
     Check if folder exists
@@ -40,7 +51,7 @@ def get_filename_event(filelist, folder_path, nevents_per_file, event_number):
     return filename, local_ev_number 
 
 
-def read_waveforms(filename, local_ev_number):
+def read_waveforms(filename, local_ev_number, xbaseline=0.9):
     """
     Return the raw waveforms from PMTs and SiPMs
     
@@ -57,8 +68,15 @@ def read_waveforms(filename, local_ev_number):
     
     pmtrwf = pmtrwf_full[local_ev_number, :, :]
     sipmrwf = sipmrwf_full[local_ev_number, :, :]
+
+    time_bins = pmtrwf.shape[1]
+    sipm_time_bins = sipmrwf.shape[1]
+    n_baseline = int(xbaseline * time_bins)
+    num_pmts=pmtrwf.shape[0]
+    num_sipms = sipmrwf.shape[0]
     
-    return pmtrwf, sipmrwf
+    return pmtrwf, sipmrwf, n_baseline, SensorPars(time_bins, num_pmts, sipm_time_bins, num_sipms)
+    
 
 
 def make_temp_file(config_file_path, unshown_var, variables, units):

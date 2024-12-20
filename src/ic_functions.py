@@ -2,6 +2,16 @@ import numpy as np
 from invisible_cities.cities.components import deconv_pmt 
 from invisible_cities.database.load_db import DataSiPM
 from invisible_cities.database.load_db import DataPMT
+from invisible_cities.database import load_db
+
+
+def get_adc_to_pes():
+    DataPMTX    = load_db.DataPMT("next100", run_number = 14637)
+    adc_to_pes = np.abs(DataPMTX.adc_to_pes.values)
+    adc_to_pes = adc_to_pes[adc_to_pes > 0]
+    adc_to_pes[(adc_to_pes > 1e+3)] = 0
+    return adc_to_pes
+
 
 def deconvolve(run_number, pmtrwf, deconv_par):
     """
@@ -12,6 +22,7 @@ def deconvolve(run_number, pmtrwf, deconv_par):
     return deconv(pmtrwf)
 
 
+
 def suppress_glow(cwf, peaks, lwindow, rwindow):
     """
     Return a wvf where the glow peaks are suppressed.
@@ -20,14 +31,8 @@ def suppress_glow(cwf, peaks, lwindow, rwindow):
     cwf2 = np.copy(cwf)
     for i, pk in enumerate(peaks):
         
-        xmin = pk - lwindow[i]
-        xmax = pk + rwindow[i]
-        
-        ###print(f" peak = {pk}, xmin = {xmin}, xmax = {xmax}")
-
-        # Set elements to zero within the range xmin to xmax
-        
-        #cwf2[(cwf2 >= xmin) & (cwf2 <= xmax)] = 0
+        xmin = lwindow[i]
+        xmax = rwindow[i]
         cwf2[xmin:xmax]=0
     
     return cwf2
