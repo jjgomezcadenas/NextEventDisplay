@@ -20,12 +20,21 @@ def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_n
     Time in mus (thus multiplity the time of PMTs by 25 10^3, or 25 ns)
     """
 
+    fig, axs = plt.subplots(1, 2, figsize=figsize)
+
+    plot_sum_waveform_tk(axs, siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_number,
+                      s1tmx, s1tmn, s2tmx, s2tmn, tbin)
+    
+    fig.tight_layout()
+
+def plot_sum_waveform_tk(axs, siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_number,
+                      s1tmx, s1tmn, s2tmx, s2tmn, tbin):
+    
+    
     label=f"evt={event_number} run={run_number}"
     timesi = np.linspace(0, n_timesi_bins, n_timesi_bins)
-    time = np.linspace(0, n_time_bins * tbin, n_time_bins)  
+    time = np.linspace(0, n_time_bins * tbin, n_time_bins) 
 
-    fig, axs = plt.subplots(1, 2, figsize=figsize)
-    
     axs[0].plot(timesi, siwf, label=label, color="blue")
     axs[0].set_title("Calibrated Sum SiPM")
     axs[0].set_xlabel("Time [μs]")
@@ -37,6 +46,7 @@ def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_n
     #axs[0].set_yscale('log')
     axs[0].grid(True)
     axs[0].legend()
+
     axs[1].plot(time, cwf, label=label, color="red")
     axs[1].axvline(s1tmn, color='yellow', linestyle='--', linewidth=2)
     axs[1].axvline(s1tmx, color='yellow', linestyle='--', linewidth=2)
@@ -48,7 +58,7 @@ def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_n
     #axs[0].set_yscale('log')
     axs[1].grid(True)
     axs[1].legend()
-    fig.tight_layout()
+    
     
     
 def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[], left_ips=[], right_ips=[], 
@@ -58,8 +68,18 @@ def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[
     Plot a waveform. Optionaly mark the position of peaks
     
     """
-    label=f"evt={event_number} run={run_number}"
     fig, axs = plt.subplots(1, 1, figsize=figsize)
+
+    plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number, 
+                     peaks, widths, left_ips, right_ips, tbin)
+    fig.tight_layout()
+
+
+def plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number, 
+                     peaks, widths, left_ips, right_ips, tbin): 
+    
+    label=f"evt={event_number} run={run_number}"
+    
     time = np.linspace(0, n_time_bins * tbin, n_time_bins)  
     axs.plot(time, wvf, label=label, color="blue")
     
@@ -103,7 +123,48 @@ def plot_waveform_pmts(wvflist, n_time_bins, tbin=25e-3):
 
     plt.subplots_adjust(wspace=0.4, hspace=0.6)  # Increase spacing between subplots
 
-    ###plt.tight_layout()
+    fig.tight_layout()
+
+
+
+def plot_sipmw(SIPMW,figsize=(18, 6)): 
+    """
+    Plot the SIPMW
+    
+    """
+    
+    fig, axs = plt.subplots(1, len(SIPMW), figsize=figsize)  # Increase figure size for clarity
+    
+    if len(SIPMW) == 1:
+        axs.plot(SIPMW[0])
+        axs.set_xlabel(f"SiPM number")
+        axs.set_ylabel("Energy in PES")
+        axs.grid(True)
+    else:
+
+        for i, sipmw in enumerate(SIPMW):
+            axs[i].plot(sipmw)
+            axs[i].set_xlabel(f"SiPM number in window {i}")
+            axs[i].set_ylabel("Energy in PES")
+            axs[i].grid(True)
+    
+    fig.tight_layout()
+
+
+def plot_signal_sipms(esi, run_number, event_number,figsize=(18, 6)): 
+    """
+    Plot the energy in the SiPMs
+    
+    """
+    label=f"evt={event_number} run={run_number}"
+    fig, axs = plt.subplots(1, 1, figsize=figsize)  # Increase figure size for clarity
+    axs.plot(esi,label=label, color="red")
+    axs.set_xlabel("SiPM number")
+    axs.set_ylabel("Energy in PES")
+    axs.grid(True)
+    axs.legend()
+    fig.tight_layout()
+
     
 def plot_waveform_zoom_peak(wvf, tpeak, tleft, tright, twindow, run_number, event_number,
                             figsize=(18, 6), tbin=25e-3, tscale=False): 
@@ -144,11 +205,22 @@ def plot_waveform_zoom_peaks(wvf, run_number, event_number, tpeaks, tlefts, trig
     """
     
     fig, axs = plt.subplots(1, len(tpeaks), figsize=figsize)
+    plot_waveform_zoom_peaks_tk(axs, wvf, run_number, event_number, tpeaks, tlefts, trights, twindows, 
+                               tbin, tscale)
+    fig.tight_layout()
+   
+
+def plot_waveform_zoom_peaks_tk(axs, wvf, run_number, event_number, tpeaks, tlefts, trights, twindows, 
+                                tbin, tscale): 
+    """
+    Plot a waveform between tmin and tamx.  Time in ns
+    """
+    
     label=f"evt={event_number} run={run_number}"
 
     if len(tpeaks) == 1:
-        tmin = tlefts[0] - twindows[0]
-        tmax = trights[0] + twindows[0]
+        tmin = tlefts[0] - int(twindows[0])
+        tmax = trights[0] + int(twindows[0])
         time = np.linspace(tmin, tmax, num=tmax-tmin)
     
         if tscale:
@@ -172,8 +244,8 @@ def plot_waveform_zoom_peaks(wvf, run_number, event_number, tpeaks, tlefts, trig
         for i, tpeak in enumerate(tpeaks):
             #tmin = tpeak - twindows[i]
             #tmax = tpeak + twindows[i]
-            tmin = tlefts[i] - twindows[i]
-            tmax = trights[i] + twindows[i]
+            tmin = tlefts[i] - int(twindows[i])
+            tmax = trights[i] + int(twindows[i])
             time = np.linspace(tmin, tmax, num=tmax-tmin)
         
             if tscale:
@@ -193,13 +265,6 @@ def plot_waveform_zoom_peaks(wvf, run_number, event_number, tpeaks, tlefts, trig
                 axs[i].grid(True)
                 axs[i].legend()
 
-        #axs.set_title("Waveform")
-       
-        
-    fig.tight_layout()
-        
-    #plt.show()
-    
     
 def plot_waveform_right_peak(wvf, tpeak, twindow, label="Waveform",
                        log=False, figsize=(18, 6), tbin=25e-3): 
@@ -356,19 +421,36 @@ def plot_sipm_max_rms(X,Y,qmax, STD, units="adc"):
     plt.show()
 
 
-def plot_sipm(X,Y,qsipm, units="adc", scale=10):
-    fig, axs = plt.subplots(1, 1, figsize=(14, 6),dpi=100)
+def plot_sipm(X,Y,QSIPM, XG, YG, scale=1,figsize=(14, 6)):
+    
+    fig, axs = plt.subplots(1, len(QSIPM), figsize=figsize)
 
-    scatter = axs.scatter(X, Y, c=qsipm, s=np.array(qsipm)/scale,
-                              cmap='plasma', alpha=0.8, edgecolors='k')
-    axs.set_title("Amp vs SiPM Positions")
-    axs.set_xlabel("X [mm]")
-    axs.set_ylabel("Y [mm]")
-    plt.colorbar(scatter, ax=axs)
+    if len(QSIPM) == 1:
+        qmax = np.max(QSIPM[0])
+        scatter = axs.scatter(X, Y, c=QSIPM[0], s=np.array(QSIPM[0])/scale,
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+        scatter = axs.scatter(XG[0], YG[0], c=10*qmax, s=np.array(qmax)/(scale/3),
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+        axs.set_title("Amp vs SiPM Positions")
+        axs.set_xlabel("X [mm]")
+        axs.set_ylabel("Y [mm]")
+        plt.colorbar(scatter, ax=axs)
+    else:
+        for i, qsipm in enumerate(QSIPM):
+            qmax = np.max(QSIPM[i])
+            scatter = axs[i].scatter(X, Y, c=qsipm, s=np.array(qsipm)/scale,
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+            scatter = axs[i].scatter(XG[i], YG[i], c=10*qmax, s=np.array(qmax)/(scale/3),
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+            axs[i].set_title("Amp vs SiPM Positions")
+            axs[i].set_xlabel("X [mm]")
+            axs[i].set_ylabel("Y [mm]")
+            plt.colorbar(scatter, ax=axs)
+
 
     # Adjust layout and display
-    fig.tight_layout()
-    return scatter.get_array()
+    #fig.tight_layout()
+    
 
 
 def plot_sum_PMT(df, log=False, offset=500):

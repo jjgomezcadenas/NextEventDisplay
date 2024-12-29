@@ -1,4 +1,12 @@
 from invisible_cities.core.system_of_units import adc, pes, mus, ns
+from dataclasses import dataclass
+
+@dataclass
+class StMinMax:
+    stmx:  float 
+    stmn:  float 
+    istmx: int 
+    istmn: int
 
 irene_pars = {
     "detector_db": "next100",
@@ -42,7 +50,7 @@ irene_pars = {
     "s2_tmin_unit": "mus",
     "s2_stride": 10,
     "s2_stride_unit": "nounit",
-    "s2_rebin_stride": 40,
+    "s2_rebin_stride": 80,
     "s2_rebin_stride_unit": "nounit",
     "thr_sipm_s2": 5.0,
     "thr_sipm_s2_units": "pes"
@@ -68,7 +76,8 @@ def get_s1_tmin_tmax(pars, tbin_pmt_ns = 25):
     
     is1tmx = int(s1tmx/tbin_pmt_ns)
     is1tmn = int(s1tmn/tbin_pmt_ns)
-    return s1tmx, s1tmn, is1tmx, is1tmn
+    return StMinMax(s1tmx, s1tmn, is1tmx, is1tmn)
+
 
 def get_s2_tmin_tmax(pars, tbin_pmt_ns = 25):
     
@@ -77,7 +86,7 @@ def get_s2_tmin_tmax(pars, tbin_pmt_ns = 25):
     
     is2tmx = int(s2tmx/tbin_pmt_ns)
     is2tmn = int(s2tmn/tbin_pmt_ns)
-    return s2tmx, s2tmn, is2tmx, is2tmn
+    return StMinMax(s2tmx, s2tmn, is2tmx, is2tmn)
 
 
 def get_maw(pars):

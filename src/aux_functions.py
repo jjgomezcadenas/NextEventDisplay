@@ -7,12 +7,26 @@ from dataclasses import dataclass
 
 @dataclass
 class SensorPars:
-    pmt_time_bins: np.array
+    pmt_time_bins: float
     num_pmts: int
-    sipm_time_bins: np.array
+    sipm_time_bins: float
     num_sipms: int
 
 
+@dataclass
+class Waveforms:
+    run_number:   float
+    event_number: float
+    n_baseline:   int 
+    pmtrwf:       np.array
+    sipmrwf:      np.array
+    
+@dataclass
+class PmtCWF:
+    ccwfs:      np.array 
+    ccwfs_maw:   np.array 
+    cwf_sum:     np.array 
+    cwf_sum_maw: np.array
 
 def check_folder_exists(run_number, base_path, path_to_wf):
     """
@@ -76,6 +90,35 @@ def read_waveforms(filename, local_ev_number, xbaseline=0.9):
     num_sipms = sipmrwf.shape[0]
     
     return pmtrwf, sipmrwf, n_baseline, SensorPars(time_bins, num_pmts, sipm_time_bins, num_sipms)
+    
+
+def load_waveforms(wfdct):
+    """
+    Given a dictionary of waveforms load the waveforms for PMTs and SiPMs
+
+    """
+
+# read the raw waveforms
+    pmtrwf = wfdct["pmt"]
+    sipmrwf = wfdct["sipm"]
+    run_number = wfdct["run_number"]
+    event_number = wfdct["event_number"]
+    
+    print(f"run_number = {run_number}, event_number = {event_number}")
+
+    num_pmts=        pmtrwf.shape[0]
+    num_sipms =      sipmrwf.shape[0]
+    time_bins =      pmtrwf.shape[1]
+    sipm_time_bins = sipmrwf.shape[1]
+    n_baseline =     int(0.9 * time_bins)
+                                
+    print(f"number of PMTs = {num_pmts}, number of PMT time bins = {time_bins}")
+    print(f"number of SiPM = {num_sipms}, number of SiPMs time bins = {sipm_time_bins}")
+    print(f"n_baseline = {n_baseline}")
+
+    wf = Waveforms(run_number, event_number, n_baseline, pmtrwf, sipmrwf)
+    sp = SensorPars(time_bins, num_pmts, sipm_time_bins, num_sipms)
+    return wf, sp 
     
 
 
