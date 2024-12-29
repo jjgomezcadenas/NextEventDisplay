@@ -18,6 +18,8 @@ def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_n
     """
     Plots the sum of the waveforms (calibrated) for SiPMs and PMTs. 
     Time in mus (thus multiplity the time of PMTs by 25 10^3, or 25 ns)
+    Interface for notebook
+
     """
 
     fig, axs = plt.subplots(1, 2, figsize=figsize)
@@ -27,8 +29,14 @@ def plot_sum_waveform(siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_n
     
     fig.tight_layout()
 
+
 def plot_sum_waveform_tk(axs, siwf, cwf, n_timesi_bins, n_time_bins, run_number, event_number,
-                      s1tmx, s1tmn, s2tmx, s2tmn, tbin):
+                         s1tmx, s1tmn, s2tmx, s2tmn, tbin):
+    """
+    Plots the sum of the waveforms (calibrated) for SiPMs and PMTs. 
+    Time in mus (thus multiplity the time of PMTs by 25 10^3, or 25 ns)
+
+    """
     
     
     label=f"evt={event_number} run={run_number}"

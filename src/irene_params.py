@@ -56,6 +56,36 @@ irene_pars = {
     "thr_sipm_s2_units": "pes"
 }
 
+fkr_globs = {"detector_db": "next100",
+             "compression": "ZLIB4",
+             "pmt_samp_wid_mus": 25E-3,
+             "tbin_pmt_ns" : 25,
+             "n_maw_samples": 100,
+             "thr_maw_adcs": 10,
+             "thr_sipm_calib_pes": 1.0,
+             "thr_sipm_pes": 5.0}
+
+fkr_pars = {
+
+    "glow_peak_prominence": 1000, 
+    "glow_peak_distance": 20,
+    "s2_peak_prominence": 100, 
+    "s2_peak_distance" : 10,
+    "s1_peak_prominence": 5, 
+    "s1_peak_distance" : 10,
+
+    "s1_rebin_stride": 2,
+    "s2_rebin_stride": 80,
+    
+    "thr_sipm_s2_mus": 5.0,
+
+    "s1_tmin_mus": 0,
+    "s1_tmax_mus": 1450,
+    "s2_tmin_mus": 1450,
+    "s2_tmax_mus": 2000
+}
+
+
 def get_units(sunit):
     if sunit == "adc":
         return adc
@@ -69,24 +99,21 @@ def get_units(sunit):
         return 1.0
 
 
-def get_s1_tmin_tmax(pars, tbin_pmt_ns = 25):
-    
-    s1tmx = pars['s1_tmax'] * get_units(pars['s1_tmax_unit'])
-    s1tmn = pars['s1_tmin'] * get_units(pars['s1_tmin_unit'])
-    
-    is1tmx = int(s1tmx/tbin_pmt_ns)
-    is1tmn = int(s1tmn/tbin_pmt_ns)
-    return StMinMax(s1tmx, s1tmn, is1tmx, is1tmn)
+def get_tmin_tmax(parameters):
 
+    s1tmx = parameters['s1_tmax_mus'] * mus
+    s1tmn = parameters['s1_tmin_mus'] * mus
+    s2tmx = parameters['s2_tmax_mus'] * mus
+    s2tmn = parameters['s2_tmin_mus'] * mus
 
-def get_s2_tmin_tmax(pars, tbin_pmt_ns = 25):
+    tbin=   fkr_globs["tbin_pmt_ns"] 
     
-    s2tmx = pars['s2_tmax'] * get_units(pars['s2_tmax_unit'])
-    s2tmn = pars['s2_tmin'] * get_units(pars['s2_tmin_unit'])
-    
-    is2tmx = int(s2tmx/tbin_pmt_ns)
-    is2tmn = int(s2tmn/tbin_pmt_ns)
-    return StMinMax(s2tmx, s2tmn, is2tmx, is2tmn)
+    is1tmx = int(s1tmx/tbin)
+    is1tmn = int(s1tmn/tbin)
+    is2tmx = int(s2tmx/tbin)
+    is2tmn = int(s2tmn/tbin)
+
+    return StMinMax(s1tmx, s1tmn, is1tmx, is1tmn), StMinMax(s2tmx, s2tmn, is2tmx, is2tmn)
 
 
 def get_maw(pars):
