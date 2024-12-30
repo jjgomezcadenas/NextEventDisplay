@@ -70,7 +70,7 @@ def plot_sum_waveform_tk(axs, siwf, cwf, n_timesi_bins, n_time_bins, run_number,
     
     
 def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[], left_ips=[], right_ips=[], 
-                  figsize=(18, 6), tbin=25e-3): 
+                  figsize=(18, 6), tbin=25e-3, sigma=2): 
     
     """
     Plot a waveform. Optionaly mark the position of peaks
@@ -84,7 +84,7 @@ def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[
 
 
 def plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number, 
-                     peaks, widths, left_ips, right_ips, tbin): 
+                     peaks, widths, left_ips, right_ips, tbin, sigma=2): 
     
     label=f"evt={event_number} run={run_number}"
     
@@ -92,8 +92,8 @@ def plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number,
     axs.plot(time, wvf, label=label, color="blue")
     
     for i, pk in enumerate(peaks):
-        lcut = tbin * (left_ips[i] -  1 * widths[i])
-        rcut = tbin * (right_ips[i] +  2 * widths[i])
+        lcut = tbin * (left_ips[i] -  sigma * widths[i])
+        rcut = tbin * (right_ips[i] +  sigma * widths[i])
         print(f"left cut = {lcut}, right cut = {rcut}")
         axs.axvline(lcut, color='red', linestyle='--', linewidth=2)
         axs.axvline(rcut, color='red', linestyle='--', linewidth=2)
@@ -143,6 +143,12 @@ def plot_sipmw(SIPMW,figsize=(18, 6)):
     
     fig, axs = plt.subplots(1, len(SIPMW), figsize=figsize)  # Increase figure size for clarity
     
+
+    plot_sipmw_tk(axs,SIPMW)
+    fig.tight_layout()
+    
+def plot_sipmw_tk(axs,SIPMW):
+
     if len(SIPMW) == 1:
         axs.plot(SIPMW[0])
         axs.set_xlabel(f"SiPM number")
@@ -156,8 +162,6 @@ def plot_sipmw(SIPMW,figsize=(18, 6)):
             axs[i].set_ylabel("Energy in PES")
             axs[i].grid(True)
     
-    fig.tight_layout()
-
 
 def plot_signal_sipms(esi, run_number, event_number,figsize=(18, 6)): 
     """

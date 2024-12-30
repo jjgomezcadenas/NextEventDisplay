@@ -74,7 +74,7 @@ fkr_pars = {
     "s1_peak_prominence": 5, 
     "s1_peak_distance" : 10,
 
-    "s1_rebin_stride": 2,
+    "s1_rebin_stride": 4,
     "s2_rebin_stride": 80,
     
     "thr_sipm_s2_mus": 5.0,
@@ -82,8 +82,30 @@ fkr_pars = {
     "s1_tmin_mus": 0,
     "s1_tmax_mus": 1450,
     "s2_tmin_mus": 1450,
-    "s2_tmax_mus": 2000
+    "s2_tmax_mus": 2000,
+    "masked_sipm" : []
 }
+
+fkr_pars_run_1463={    
+    "glow_peak_prominence": 1000, 
+    "glow_peak_distance": 20,
+    "s2_peak_prominence": 100, 
+    "s2_peak_distance" : 10,
+    "s1_peak_prominence": 5, 
+    "s1_peak_distance" : 10,
+
+    "s1_rebin_stride": 4,
+    "s2_rebin_stride": 80,
+    
+    "thr_sipm_s2_mus": 5.0,
+
+    "s1_tmin_mus": 0,
+    "s1_tmax_mus": 250,
+    "s2_tmin_mus": 0,
+    "s2_tmax_mus": 800,
+    "masked_sipm" : [2425]
+    }
+
 
 
 def get_units(sunit):
@@ -99,14 +121,12 @@ def get_units(sunit):
         return 1.0
 
 
-def get_tmin_tmax(parameters):
+def get_tmin_tmax(parameters, tbin):
 
     s1tmx = parameters['s1_tmax_mus'] * mus
     s1tmn = parameters['s1_tmin_mus'] * mus
     s2tmx = parameters['s2_tmax_mus'] * mus
     s2tmn = parameters['s2_tmin_mus'] * mus
-
-    tbin=   fkr_globs["tbin_pmt_ns"] 
     
     is1tmx = int(s1tmx/tbin)
     is1tmn = int(s1tmn/tbin)

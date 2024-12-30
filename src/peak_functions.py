@@ -20,10 +20,9 @@ def find_peak_params(cwf, itmn, itmx, prominence=1000, distance=20, plateau_size
     """
     peaks, props = find_peaks(cwf[itmn:itmx], prominence=prominence, distance=distance, plateau_size=plateau_size)
     widths, _, left_ips, right_ips = peak_widths(cwf, peaks, rel_height=0.5)
-    lcuts = [int(left_ips[i] -  nsigma * widths[i]) for i in range(len(widths))]
-    rcuts = [int(right_ips[i] +  nsigma * widths[i]) for i in range(len(widths))]
+    lcuts = np.array([int(left_ips[i] -  nsigma * widths[i]) for i in range(len(widths))])
+    rcuts = np.array([int(right_ips[i] +  nsigma * widths[i]) for i in range(len(widths))])
     return PeakPars(peaks, widths, props["prominences"], left_ips, right_ips,lcuts, rcuts)
-
 
 
 def rebin_2d(xx, r):
@@ -91,6 +90,8 @@ def print_peak_pars(pp, tspmt, mode="wvfm"):
         print(f"left ips (mus) = {tspmt*np.array(pp.left_ips)}")
         print(f"right ips (mus) = {tspmt*np.array(pp.right_ips)}")
         print(f"left cuts = {pp.lcuts}, right cuts = {pp.rcuts}")
+        print(f"left cuts (mus) = {tspmt * pp.lcuts}, right cuts = {tspmt * pp.rcuts}")
+        
     else:
         print(f"found peaks -->{pp.peaks}, time position (samples): {np.array(pp.peaks)}")
         print(f"prominences = {np.array(pp.proms)}")
