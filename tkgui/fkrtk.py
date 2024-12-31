@@ -117,15 +117,6 @@ class FkTkApp:
                     self.entries[self.PARS[ip]] = entry
                     k = k+1
                 ip+=1
-      
-        # for (param, value) in enumerate(self.parameters.items()):
-        #     label = tk.Label(self.param_frame, text=param)
-        #     label.grid(row=i, column=j%2, sticky="e", padx=5, pady=2)
-        #     entry = tk.Entry(self.param_frame, width=10)
-        #     entry.insert(0, str(value))
-        #     entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
-        #     self.entries[param] = entry
-
 
         # Label for event number
         self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
