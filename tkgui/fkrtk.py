@@ -30,12 +30,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-from irene_params import fkr_globs, fkr_pars, fkr_pars_run_1463
+from irene_params import fkr_globs, fkr_pars, fkr_pars_run_1463, masked_sipm
 #import irene_params as irp
 
 from irene_functions import  wf_from_files
 from aux_functions import  load_waveforms
-from peak_functions import  rebin_2d, rebin_sum
+from peak_functions import  rebin_2d, rebin_sum, get_sipm_max
 
 from ic_functions import suppress_glow 
 
@@ -49,11 +49,11 @@ from invisible_cities.database.load_db import DataSiPM
 from invisible_cities.database.load_db import DataPMT
 from invisible_cities.core.system_of_units import adc, pes, mus, ns
 
-from irene_params import get_tmin_tmax
+from irene_params import get_s1_tmin_tmax, get_s2_tmin_tmax
 
 from plot_functions1 import plot_adc_to_pes
 from plot_functions import plot_sum_waveform_tk, plot_waveform_zoom_peaks_tk, plot_sipmw_tk
-from plot_functions import plot_waveform_tk
+from plot_functions import plot_waveform_tk,  plot_sipm_tk
 
 # Globals
 
@@ -92,15 +92,50 @@ class FkTkApp:
         self.param_frame.bind("<Configure>", self._on_frame_configure)
 
         # Populate param_frame with entries
-        for i, (param, value) in enumerate(self.parameters.items()):
-            label = tk.Label(self.param_frame, text=param)
-            label.grid(row=i, column=0, sticky="e", padx=5, pady=2)
-            entry = tk.Entry(self.param_frame, width=30)
-            entry.insert(0, str(value))
-            entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
-            self.entries[param] = entry
-        
 
+        self.PARS = []
+        self.VALS = []
+        self.nc =3       # number of columns to arrange the parameters 
+
+        for (param, value) in self.parameters.items():
+            self.PARS.append(param)
+            self.VALS.append(value)
+        
+        self.nr =int(len(self.PARS)/self.nc)+1
+
+        ip = 0
+        for i in range(self.nr):
+            k=0
+            for j in range(self.nc):
+                if ip < len(self.PARS):
+                    label = tk.Label(self.param_frame, text= self.PARS[ip])
+                    label.grid(row=i, column=j+k, sticky="e", padx=5, pady=2)
+                
+                    entry = tk.Entry(self.param_frame, width=10)
+                    entry.insert(0, str( self.VALS[ip]))
+                    entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
+                    self.entries[self.PARS[ip]] = entry
+                    k = k+1
+                ip+=1
+      
+        # for (param, value) in enumerate(self.parameters.items()):
+        #     label = tk.Label(self.param_frame, text=param)
+        #     label.grid(row=i, column=j%2, sticky="e", padx=5, pady=2)
+        #     entry = tk.Entry(self.param_frame, width=10)
+        #     entry.insert(0, str(value))
+        #     entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
+        #     self.entries[param] = entry
+
+
+        # Label for event number
+        self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
+        self.label_event_num.grid(row=i+1, column=0, sticky="e", padx=5, pady=2)
+
+        # Entry widget to accept the event number
+        self.event_number_entry = tk.Entry(self.param_frame, width=5)
+        self.event_number_entry.insert(0, -1)
+        self.event_number_entry.grid(row=i+1, column=1, sticky="w", padx=5, pady=2)
+        
         # Button frame
         self.button_frame = tk.Frame(self.master)
         self.button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
@@ -113,72 +148,72 @@ class FkTkApp:
         # "Load File" button
         self.load_file_button = tk.Button(self.button_frame, text="Read Data File", 
                                           command=self.load_file)
-        self.load_file_button.pack(side=tk.LEFT, padx=5)
+        self.load_file_button.grid(row=0, column=0, sticky="e", padx=5, pady=2)
 
         # "Load event" button
         self.load_events_button = tk.Button(self.button_frame, text="Load Event", 
                                             command=self.load_events, state="disabled")
-        self.load_events_button.pack(side=tk.LEFT, padx=5)
+        self.load_events_button.grid(row=0, column=1, sticky="e", padx=5, pady=2) 
 
-        # Label for event number
-        self.label_event_num = tk.Label(self.button_frame, text="Event Number:")
-        self.label_event_num.pack(side=tk.LEFT, padx=5)
-
-        # Entry widget to accept the event number
-        self.event_number_entry = tk.Entry(self.button_frame, width=5)
-        self.event_number_entry.insert(0, 0)
-        self.event_number_entry.pack(side=tk.LEFT, padx=5)
-        
+        # "Print parameters" button 
+        self.print_params_button = tk.Button(self.button_frame, text="Print Parameters", 
+                                             command=self.print_parameters)
+        self.print_params_button.grid(row=0, column=2, sticky="e", padx=5, pady=2)      
     
         # "Plot waveforms" button 
         self.plot_cwf_button = tk.Button(self.button_frame, text="Plot WFS", 
                                          command=self.plot_cwf, state="disabled")
-        self.plot_cwf_button.pack(side=tk.LEFT, padx=5)
+        self.plot_cwf_button.grid(row=1, column=0, sticky="e", padx=5, pady=2)
 
         # "Find glow" button 
         self.find_glow_button = tk.Button(self.button_frame, text="Find Glow", 
                                          command=self.find_glow, state="disabled")
-        self.find_glow_button.pack(side=tk.LEFT, padx=5)
+        self.find_glow_button.grid(row=1, column=1, sticky="e", padx=5, pady=2)
 
         #  Plot glow, glow zooms and corrected waveform
-        self.glow_plot_wvf_button   = tk.Button(self.master, text="Plot Glow", 
+        self.glow_plot_wvf_button   = tk.Button(self.button_frame, text="Plot Glow", 
                                                 command=self.plot_glow_wvfm, state="disabled")
-        self.glow_plot_wvf_button.pack(side=tk.LEFT, padx=5)
+        self.glow_plot_wvf_button.grid(row=1, column=2, sticky="e", padx=5, pady=2)
 
-        self.glow_zoom_peaks_button = tk.Button(self.master, text="Zoom Glow", 
+        self.glow_zoom_peaks_button = tk.Button(self.button_frame, text="Zoom Glow", 
                                                 command=self.plot_glow_zoom_peaks, state="disabled")
-        self.glow_zoom_peaks_button.pack(side=tk.LEFT, padx=5)
+        self.glow_zoom_peaks_button.grid(row=1, column=3, sticky="e", padx=5, pady=2)
         
-        self.plot_corr_wvfm_button = tk.Button(self.master, text="Plot CWF", 
+        self.plot_corr_wvfm_button = tk.Button(self.button_frame, text="Plot CWF", 
                                                 command=self.plot_corr_wvfm, state="disabled")
-        self.plot_corr_wvfm_button.pack(side=tk.LEFT, padx=5)
+        self.plot_corr_wvfm_button.grid(row=1, column=4, sticky="e", padx=5, pady=2)
        
        # S2 search
-        self.s2_search_button   = tk.Button(self.master, text="S2 Search", 
+        self.s2_search_button   = tk.Button(self.button_frame, text="S2 Search", 
                                                 command=self.s2_search, state="disabled")
-        self.s2_search_button.pack(side=tk.LEFT, padx=5)
+        self.s2_search_button.grid(row=2, column=0, sticky="e", padx=5, pady=2)
 
         # S1 search
-        self.s1_search_button   = tk.Button(self.master, text="S1 Search", 
+        self.s1_search_button   = tk.Button(self.button_frame, text="S1 Search", 
                                                 command=self.s1_search, state="disabled")
-        self.s1_search_button.pack(side=tk.LEFT, padx=5)
+        self.s1_search_button.grid(row=2, column=1, sticky="e", padx=5, pady=2)
 
         # Plot SiPMs
-        self.plot_sipm_button   = tk.Button(self.master, text="Plot SiPMs", 
+        self.plot_sipm_button   = tk.Button(self.button_frame, text="Plot SiPMs", 
                                                 command=self.plot_sipm, state="disabled")
-        self.plot_sipm_button.pack(side=tk.LEFT, padx=5)
+        self.plot_sipm_button.grid(row=3, column=0, sticky="e", padx=5, pady=2)
 
         # Get SiPMs in S2 window(s)
-        self.get_sipm_s2_window_button   = tk.Button(self.master, text="Get SiPMs in S2 window", 
+        self.get_sipm_s2_window_button   = tk.Button(self.button_frame, text="Get SiPMs in S2 window", 
                                                 command=self.get_sipm_s2_window, state="disabled")
-        self.get_sipm_s2_window_button.pack(side=tk.LEFT, padx=5)
+        self.get_sipm_s2_window_button.grid(row=3, column=1, sticky="e", padx=5, pady=2)
 
-    
-        # "Print parameters" button 
-        self.print_params_button = tk.Button(self.button_frame, text="Print Parameters", 
-                                             command=self.print_parameters)
-        self.print_params_button.pack(side=tk.LEFT, padx=5)
+        # SiPMs in S2 sum in window(s)
+        self.get_sipm_s2_window_sum_button   = tk.Button(self.button_frame, text="Sum SiPMs in S2 window", 
+                                                command=self.get_sipm_s2_window_sum, state="disabled")
+        self.get_sipm_s2_window_sum_button.grid(row=3, column=2, sticky="e", padx=5, pady=2)
 
+        # SiPMs Baricenter
+        self.get_sipm_baricenter_button   = tk.Button(self.button_frame, text="Compute Baricenter", 
+                                                command=self.compute_baricenter, state="disabled")
+        self.get_sipm_baricenter_button.grid(row=3, column=3, sticky="e", padx=5, pady=2)
+
+        
         # Frame to hold the matplotlib plot
         self.plot_frame = tk.Frame(self.master)
         self.plot_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -220,6 +255,8 @@ class FkTkApp:
             self.s1_search_button.config(state="disabled")
             self.plot_sipm_button.config(state="disabled")
             self.get_sipm_s2_window_button.config(state="disabled")
+            self.get_sipm_s2_window_sum_button.config(state="disabled")
+            self.get_sipm_baricenter_button.config(state="disabled")
         
            
     def load_events(self):
@@ -243,16 +280,18 @@ class FkTkApp:
 
         print(f"Reading local event number = {event_number}")
 
-        if event_number >=  self.current_event: # skip the difference between actual and current
+        if event_number < 0:
+            events_to_skip = 0
+            self.current_event = self.current_event+1
+
+        elif event_number >=  self.current_event: # skip the difference between actual and current
             events_to_skip = event_number - self.current_event
             self.current_event = event_number
-        elif event_number >=  0: # we need to rewind
+        else: # we need to rewind
             self.wfg = wf_from_files([self.file_path], WfType.rwf)
             events_to_skip = event_number
             self.current_event = event_number
-        else: # read next event and increase the counter by one
-            events_to_skip = 0
-            self.current_event = self.current_event+1
+        
         
         for i in range(events_to_skip): # read but do not process event up to event_number
             wfdct = next(self.wfg)  
@@ -261,7 +300,8 @@ class FkTkApp:
         
         self.wf, self.sp = load_waveforms(wfdct)  # get waveform and sensor parameters
         self.tspmt =fkr_globs["pmt_samp_wid_mus"]  # time conversion for PMTs
-                                   
+
+        print(f" Event loaded: run number = {self.wf.run_number}, event number = {self.wf.event_number}")    
         print(f"number of PMTs = {self.sp.num_pmts}, number of PMT time bins = {self.sp.pmt_time_bins}")
         print(f"number of SiPM = {self.sp.num_sipms}, number of SiPMs time bins = {self.sp.sipm_time_bins}")
         print(f"n_baseline = {self.wf.n_baseline}")
@@ -269,17 +309,39 @@ class FkTkApp:
 
         if self.wf.run_number == 14643:
             self.parameters = fkr_pars_run_1463
+            self.PARS = []
+            self.VALS = []
+
+            for (param, value) in self.parameters.items():
+                self.PARS.append(param)
+                self.VALS.append(value)
+           
+            ip = 0
+            for i in range(self.nr):
+                k=0
+                for j in range(self.nc):
+                    if ip < len(self.PARS):
+                        entry = tk.Entry(self.param_frame, width=10)
+                        entry.insert(0, str(self.VALS[ip]))
+                        entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
+                        self.entries[self.PARS[ip]] = entry
+                        k = k+1
+                    ip+=1
+
            
 
-            for i, (param, value) in enumerate(self.parameters.items()):
-                entry = tk.Entry(self.param_frame, width=30)
-                entry.insert(0, str(value))
-                entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
-                self.entries[param] = entry
+            # Label for event number
+            self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
+            self.label_event_num.grid(row=i+1, column=0, sticky="e", padx=5, pady=2)
 
+            # Entry widget to accept the event number
+            self.event_number_entry = tk.Entry(self.param_frame, width=5)
+            self.event_number_entry.insert(0, -1)
+            self.event_number_entry.grid(row=i+1, column=1, sticky="w", padx=5, pady=2)
 
         tbin=   fkr_globs["tbin_pmt_ns"] 
-        self.st1, self.st2 = get_tmin_tmax(self.parameters, tbin)
+        self.st1 = get_s1_tmin_tmax(self.parameters, tbin)
+        self.st2 = get_s2_tmin_tmax(self.parameters, tbin)
 
         print(f"s1tmx = {self.st1.stmx/mus} mus, s1tmn = {self.st1.stmn/mus} mus")
         print(f"is1tmx = {self.st1.istmx}, s1tmn = {self.st1.istmn}")
@@ -334,10 +396,16 @@ class FkTkApp:
 
         self.sipm_sum = np.sum(sipmcwf, axis=0)  # sum
         self.sipmrbwf = rebin_2d(sipmcwf, 2)     # rebinned waveform at 2 mus
-        msipm =self.parameters["masked_sipm"] 
 
-        if len(msipm) > 0:
-            self.sipmrbwf[msipm] = 0
+
+        # msipm = []
+        # for run_number, value in masked_sipm.items():
+        #  if run_number == self.wf.run_number:
+        #     msipm = value
+        #     break         
+            
+        if len(masked_sipm) > 0:
+            self.sipmrbwf[masked_sipm] = 0
     
 
     def find_glow(self):
@@ -373,8 +441,7 @@ class FkTkApp:
         self.s2_search_button.config(state="normal")
         self.s1_search_button.config(state="normal")
         self.plot_sipm_button.config(state="normal")
-        self.get_sipm_s2_window_button.config(state="normal")
-
+        
 
     def s2_search(self):
         """
@@ -394,7 +461,7 @@ class FkTkApp:
         distance  = self.parameters["s2_peak_distance"]
 
         tbin=   int(fkr_globs["tbin_pmt_ns"] *  s2_rebin)
-        self.st1, self.st2 = get_tmin_tmax(self.parameters, tbin)
+        self.st2 = get_s2_tmin_tmax(self.parameters, tbin)
 
         print(f"Searching S2 with s2 tmin = {self.st2.stmn/mus}, s2 tmax = {self.st2.stmx/mus}")
         print(f"index s2 tmin = {self.st2.istmn}, index s1 tmax = {self.st2.istmx}")
@@ -406,6 +473,8 @@ class FkTkApp:
         print(f"Energy of S2 = {s12_energy(self.cwf_s2, self.ps2)} pes")
 
         self.plot_s2_wvfm()
+        # activate buttom to search SiPMs on window S2
+        self.get_sipm_s2_window_button.config(state="normal")
 
     
     def s1_search(self):
@@ -422,7 +491,7 @@ class FkTkApp:
         print(f"cwf_s1 length = {self.cwf_s1.shape[0]}")
 
         tbin=   int(fkr_globs["tbin_pmt_ns"] *  self.s1_rebin)
-        self.st1, self.st2 = get_tmin_tmax(self.parameters, tbin)
+        self.st1 = get_s1_tmin_tmax(self.parameters, tbin)
 
         prominence= self.parameters["s1_peak_prominence"]
         distance  = self.parameters["s1_peak_distance"]
@@ -447,13 +516,49 @@ class FkTkApp:
         self.SIPMW = get_s2_windows(self.sipmrbwf, self.ps2)
 
         self.fig.clear()
-        axs = self.fig.subplots(1, 1)
+        axs = self.fig.subplots(1, len(self.SIPMW))
 
         plot_sipmw_tk(axs,self.SIPMW)
         
         self.fig.tight_layout() 
         self.canvas_plot.draw()
 
+        self.get_sipm_s2_window_sum_button.config(state="normal")
+
+
+    def get_sipm_s2_window_sum(self):
+        """
+        Sum the signals of SiPMs in the windows (with a threshold) 
+        """
+
+        thr = self.parameters["thr_sipm_s2_pes"]
+        self.QSIPM = s2_windows_sum(self.SIPMW, thr)
+
+        _ = get_sipm_max(self.QSIPM)
+
+        self.fig.clear()
+        axs = self.fig.subplots(1, len(self.QSIPM))
+        plot_sipmw_tk(axs,self.QSIPM)
+        
+        self.fig.tight_layout() 
+        self.canvas_plot.draw()
+
+        self.get_sipm_baricenter_button.config(state="normal")
+
+        
+    def compute_baricenter(self):
+        """
+        Compute Baricenter
+
+        """
+        XG, YG = sipm_xg(XSi, YSi, self.QSIPM)
+
+        self.fig.clear()
+        axs = self.fig.subplots(1, len(self.QSIPM))
+
+        plot_sipm_tk(axs,XSi,YSi,self.QSIPM, XG, YG)
+        self.canvas_plot.draw()
+        
 
     def plot_sipm(self):
         """
@@ -533,7 +638,7 @@ class FkTkApp:
 
         """
         self.fig.clear()
-        axs = self.fig.subplots(1, len(self.pp.peaks))
+        axs = self.fig.subplots(1, 1)
 
         plot_waveform_tk(axs, self.cwf_sum_maw, self.sp.pmt_time_bins, 
                              self.wf.run_number, self.wf.event_number, 

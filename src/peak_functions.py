@@ -19,10 +19,11 @@ def find_peak_params(cwf, itmn, itmx, prominence=1000, distance=20, plateau_size
 
     """
     peaks, props = find_peaks(cwf[itmn:itmx], prominence=prominence, distance=distance, plateau_size=plateau_size)
-    widths, _, left_ips, right_ips = peak_widths(cwf, peaks, rel_height=0.5)
+    widths, _, left_ips, right_ips = peak_widths(cwf[itmn:itmx], peaks, rel_height=0.5)
     lcuts = np.array([int(left_ips[i] -  nsigma * widths[i]) for i in range(len(widths))])
     rcuts = np.array([int(right_ips[i] +  nsigma * widths[i]) for i in range(len(widths))])
-    return PeakPars(peaks, widths, props["prominences"], left_ips, right_ips,lcuts, rcuts)
+    return PeakPars(peaks+ itmn, widths, props["prominences"], 
+                    left_ips+ itmn, right_ips+ itmn,lcuts+ itmn, rcuts+ itmn)
 
 
 def rebin_2d(xx, r):
@@ -133,6 +134,26 @@ def get_s2_windows(sipmwf, ps):
         print(f"sipm window shape {sipmw.shape}")
         SIPMW.append(sipmw)
     return SIPMW
+
+
+def get_sipm_max(QSIPM):
+    """
+    QSIPM is a list containing the SiPMs in S2 windows
+    Returns the maximum (index and value) in each window
+    """
+    MX = []
+    
+    for i, qsipm in enumerate(QSIPM):
+        max_value = np.max(qsipm)
+        max_index = np.argmax(qsipm)
+        
+        print(f"Sipm: Window = {i}")
+
+        print("Max value:", max_value)
+        print("Index of max value:", max_index)
+        MX.append((max_index,max_value))
+    
+    return MX
 
 
 def s2_windows_sum(SIPMW, thr=3):

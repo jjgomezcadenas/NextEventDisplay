@@ -66,24 +66,22 @@ fkr_globs = {"detector_db": "next100",
              "thr_sipm_pes": 5.0}
 
 fkr_pars = {
-
     "glow_peak_prominence": 1000, 
     "glow_peak_distance": 20,
     "s2_peak_prominence": 100, 
-    "s2_peak_distance" : 10,
-    "s1_peak_prominence": 5, 
+    "s2_peak_distance" : 20,
+    "s1_peak_prominence": 10, 
     "s1_peak_distance" : 10,
 
     "s1_rebin_stride": 4,
     "s2_rebin_stride": 80,
     
-    "thr_sipm_s2_mus": 5.0,
-
     "s1_tmin_mus": 0,
     "s1_tmax_mus": 1450,
     "s2_tmin_mus": 1450,
     "s2_tmax_mus": 2000,
-    "masked_sipm" : []
+
+    "thr_sipm_s2_pes": 5.0
 }
 
 fkr_pars_run_1463={    
@@ -96,17 +94,18 @@ fkr_pars_run_1463={
 
     "s1_rebin_stride": 4,
     "s2_rebin_stride": 80,
-    
-    "thr_sipm_s2_mus": 5.0,
-
+ 
     "s1_tmin_mus": 0,
     "s1_tmax_mus": 250,
     "s2_tmin_mus": 0,
     "s2_tmax_mus": 800,
-    "masked_sipm" : [2425]
+       
+    "thr_sipm_s2_pes": 5.0
     }
 
-
+ 
+#masked_sipm ={14643:[2425]}
+masked_sipm =[2425] 
 
 def get_units(sunit):
     if sunit == "adc":
@@ -134,6 +133,26 @@ def get_tmin_tmax(parameters, tbin):
     is2tmn = int(s2tmn/tbin)
 
     return StMinMax(s1tmx, s1tmn, is1tmx, is1tmn), StMinMax(s2tmx, s2tmn, is2tmx, is2tmn)
+
+
+def get_s1_tmin_tmax(parameters, tbin):
+
+    s1tmx = parameters['s1_tmax_mus'] * mus
+    s1tmn = parameters['s1_tmin_mus'] * mus
+    
+    is1tmx = int(s1tmx/tbin)
+    is1tmn = int(s1tmn/tbin)
+    return StMinMax(s1tmx, s1tmn, is1tmx, is1tmn)
+
+
+def get_s2_tmin_tmax(parameters, tbin):
+
+    s2tmx = parameters['s2_tmax_mus'] * mus
+    s2tmn = parameters['s2_tmin_mus'] * mus
+    
+    is2tmx = int(s2tmx/tbin)
+    is2tmn = int(s2tmn/tbin)
+    return  StMinMax(s2tmx, s2tmn, is2tmx, is2tmn)
 
 
 def get_maw(pars):

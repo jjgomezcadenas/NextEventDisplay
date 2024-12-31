@@ -88,7 +88,8 @@ def plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number,
     
     label=f"evt={event_number} run={run_number}"
     
-    time = np.linspace(0, n_time_bins * tbin, n_time_bins)  
+    time = np.linspace(0, n_time_bins * tbin, n_time_bins)
+ 
     axs.plot(time, wvf, label=label, color="blue")
     
     for i, pk in enumerate(peaks):
@@ -155,13 +156,50 @@ def plot_sipmw_tk(axs,SIPMW):
         axs.set_ylabel("Energy in PES")
         axs.grid(True)
     else:
-
         for i, sipmw in enumerate(SIPMW):
             axs[i].plot(sipmw)
             axs[i].set_xlabel(f"SiPM number in window {i}")
             axs[i].set_ylabel("Energy in PES")
             axs[i].grid(True)
     
+
+def plot_sipm(X,Y,QSIPM, XG, YG, scale=1,figsize=(14, 6)):
+    """
+    Plot the signals from the SiPMs together with barycenter
+    """
+    
+    fig, axs = plt.subplots(1, len(QSIPM), figsize=figsize)
+
+    plot_sipm_tk(axs, X,Y,QSIPM, XG, YG, scale)
+
+    # Adjust layout and display
+    #fig.tight_layout()
+
+def plot_sipm_tk(axs, X,Y,QSIPM, XG, YG, scale=1):
+
+    if len(QSIPM) == 1:
+        qmax = np.max(QSIPM[0])
+        scatter = axs.scatter(X, Y, c=QSIPM[0], s=np.array(QSIPM[0])/scale,
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+        scatter = axs.scatter(XG[0], YG[0], c=10*qmax, s=np.array(qmax)/(scale/3),
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+        axs.set_title("Amp vs SiPM Positions")
+        axs.set_xlabel("X [mm]")
+        axs.set_ylabel("Y [mm]")
+        plt.colorbar(scatter, ax=axs)
+    else:
+        for i, qsipm in enumerate(QSIPM):
+            qmax = np.max(QSIPM[i])
+            scatter = axs[i].scatter(X, Y, c=qsipm, s=np.array(qsipm)/scale,
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+            scatter = axs[i].scatter(XG[i], YG[i], c=10*qmax, s=np.array(qmax)/(scale/3),
+                                cmap='plasma', alpha=0.8, edgecolors='k')
+            axs[i].set_title("Amp vs SiPM Positions")
+            axs[i].set_xlabel("X [mm]")
+            axs[i].set_ylabel("Y [mm]")
+            plt.colorbar(scatter, ax=axs)
+
+
 
 def plot_signal_sipms(esi, run_number, event_number,figsize=(18, 6)): 
     """
@@ -431,38 +469,6 @@ def plot_sipm_max_rms(X,Y,qmax, STD, units="adc"):
     # Adjust layout and display
     plt.tight_layout()
     plt.show()
-
-
-def plot_sipm(X,Y,QSIPM, XG, YG, scale=1,figsize=(14, 6)):
-    
-    fig, axs = plt.subplots(1, len(QSIPM), figsize=figsize)
-
-    if len(QSIPM) == 1:
-        qmax = np.max(QSIPM[0])
-        scatter = axs.scatter(X, Y, c=QSIPM[0], s=np.array(QSIPM[0])/scale,
-                                cmap='plasma', alpha=0.8, edgecolors='k')
-        scatter = axs.scatter(XG[0], YG[0], c=10*qmax, s=np.array(qmax)/(scale/3),
-                                cmap='plasma', alpha=0.8, edgecolors='k')
-        axs.set_title("Amp vs SiPM Positions")
-        axs.set_xlabel("X [mm]")
-        axs.set_ylabel("Y [mm]")
-        plt.colorbar(scatter, ax=axs)
-    else:
-        for i, qsipm in enumerate(QSIPM):
-            qmax = np.max(QSIPM[i])
-            scatter = axs[i].scatter(X, Y, c=qsipm, s=np.array(qsipm)/scale,
-                                cmap='plasma', alpha=0.8, edgecolors='k')
-            scatter = axs[i].scatter(XG[i], YG[i], c=10*qmax, s=np.array(qmax)/(scale/3),
-                                cmap='plasma', alpha=0.8, edgecolors='k')
-            axs[i].set_title("Amp vs SiPM Positions")
-            axs[i].set_xlabel("X [mm]")
-            axs[i].set_ylabel("Y [mm]")
-            plt.colorbar(scatter, ax=axs)
-
-
-    # Adjust layout and display
-    #fig.tight_layout()
-    
 
 
 def plot_sum_PMT(df, log=False, offset=500):
