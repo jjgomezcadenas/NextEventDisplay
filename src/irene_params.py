@@ -81,7 +81,7 @@ fkr_pars = {
     "s2_tmin_mus": 1450,
     "s2_tmax_mus": 2000,
 
-    "thr_sipm_s2_pes": 2.0
+    "thr_sipm_s2_pes": 5.0
 }
 
 fkr_pars_run_1463={    

@@ -93,39 +93,41 @@ class FkTkApp:
 
         # Populate param_frame with entries
 
-        self.PARS = []
-        self.VALS = []
+        #self.PARS = []
+        #self.VALS = []
         self.nc =3       # number of columns to arrange the parameters 
+        self.nr =int(len(self.parameters)/self.nc)+1
+        self.update_entries_from_parameters()
 
-        for (param, value) in self.parameters.items():
-            self.PARS.append(param)
-            self.VALS.append(value)
+        # for (param, value) in self.parameters.items():
+        #     self.PARS.append(param)
+        #     self.VALS.append(value)
         
-        self.nr =int(len(self.PARS)/self.nc)+1
+        # self.nr =int(len(self.PARS)/self.nc)+1
 
-        ip = 0
-        for i in range(self.nr):
-            k=0
-            for j in range(self.nc):
-                if ip < len(self.PARS):
-                    label = tk.Label(self.param_frame, text= self.PARS[ip])
-                    label.grid(row=i, column=j+k, sticky="e", padx=5, pady=2)
+        # ip = 0
+        # for i in range(self.nr):
+        #     k=0
+        #     for j in range(self.nc):
+        #         if ip < len(self.PARS):
+        #             label = tk.Label(self.param_frame, text= self.PARS[ip])
+        #             label.grid(row=i, column=j+k, sticky="e", padx=5, pady=2)
                 
-                    entry = tk.Entry(self.param_frame, width=10)
-                    entry.insert(0, str( self.VALS[ip]))
-                    entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
-                    self.entries[self.PARS[ip]] = entry
-                    k = k+1
-                ip+=1
+        #             entry = tk.Entry(self.param_frame, width=10)
+        #             entry.insert(0, str( self.VALS[ip]))
+        #             entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
+        #             self.entries[self.PARS[ip]] = entry
+        #             k = k+1
+        #         ip+=1
 
         # Label for event number
         self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
-        self.label_event_num.grid(row=i+1, column=0, sticky="e", padx=5, pady=2)
+        self.label_event_num.grid(row=self.nr+1, column=0, sticky="e", padx=5, pady=2)
 
         # Entry widget to accept the event number
         self.event_number_entry = tk.Entry(self.param_frame, width=5)
         self.event_number_entry.insert(0, -1)
-        self.event_number_entry.grid(row=i+1, column=1, sticky="w", padx=5, pady=2)
+        self.event_number_entry.grid(row=self.nr+1, column=1, sticky="w", padx=5, pady=2)
         
         # Button frame
         self.button_frame = tk.Frame(self.master)
@@ -283,6 +285,15 @@ class FkTkApp:
             events_to_skip = event_number
             self.current_event = event_number
         
+        # # Label for event number
+        # self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
+        # self.label_event_num.grid(row=i+1, column=0, sticky="e", padx=5, pady=2)
+
+        # # Entry widget to accept the event number
+        # self.event_number_entry = tk.Entry(self.param_frame, width=5)
+        # self.event_number_entry.insert(0, -1)
+        # self.event_number_entry.grid(row=i+1, column=1, sticky="w", padx=5, pady=2)
+        
         
         for i in range(events_to_skip): # read but do not process event up to event_number
             wfdct = next(self.wfg)  
@@ -298,37 +309,9 @@ class FkTkApp:
         print(f"n_baseline = {self.wf.n_baseline}")
         print(f"time sample pmt  = {self.tspmt} mus")
 
-        if self.wf.run_number == 14643:
-            self.parameters = fkr_pars_run_1463
-            self.PARS = []
-            self.VALS = []
+        # Change default parameters as a function of the run
+        self.update_parameters_from_run() 
 
-            for (param, value) in self.parameters.items():
-                self.PARS.append(param)
-                self.VALS.append(value)
-           
-            ip = 0
-            for i in range(self.nr):
-                k=0
-                for j in range(self.nc):
-                    if ip < len(self.PARS):
-                        entry = tk.Entry(self.param_frame, width=10)
-                        entry.insert(0, str(self.VALS[ip]))
-                        entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
-                        self.entries[self.PARS[ip]] = entry
-                        k = k+1
-                    ip+=1
-
-           
-
-            # Label for event number
-            self.label_event_num = tk.Label(self.param_frame, text="Event Number:")
-            self.label_event_num.grid(row=i+1, column=0, sticky="e", padx=5, pady=2)
-
-            # Entry widget to accept the event number
-            self.event_number_entry = tk.Entry(self.param_frame, width=5)
-            self.event_number_entry.insert(0, -1)
-            self.event_number_entry.grid(row=i+1, column=1, sticky="w", padx=5, pady=2)
 
         tbin=   fkr_globs["tbin_pmt_ns"] 
         self.st1 = get_s1_tmin_tmax(self.parameters, tbin)
@@ -407,6 +390,8 @@ class FkTkApp:
         PeakPars(peaks, widths, props["prominences"], left_ips, right_ips,lcuts, rcuts)
         """
 
+        self.update_parameters_from_entries()
+
         prominence= self.parameters["glow_peak_prominence"]
         distance  = self.parameters["glow_peak_distance"]
 
@@ -440,6 +425,8 @@ class FkTkApp:
         Search for S2 peaks
 
         """
+
+        self.update_parameters_from_entries()
 
         s2_rebin = int(self.parameters["s2_rebin_stride"])
         self.cwf_s2 = rebin_sum(self.sum_cwf_corr, s2_rebin)
@@ -475,6 +462,9 @@ class FkTkApp:
         Search for S1 peaks
 
         """
+
+        self.update_parameters_from_entries()
+
         self.s1_rebin = int(self.parameters["s1_rebin_stride"])
         self.cwf_s1 = rebin_sum(self.sum_cwf_corr, self.s1_rebin)
         self.tbins1 = self.tspmt * self.s1_rebin
@@ -488,7 +478,6 @@ class FkTkApp:
         prominence= self.parameters["s1_peak_prominence"]
         distance  = self.parameters["s1_peak_distance"]
         
-
         print(f"Searching S1 with s1 tmin = {self.st1.stmn/mus}, s1 tmax = {self.st1.stmx/mus}")
         print(f"index s1 tmin = {self.st1.istmn}, index s1 tmax = {self.st1.istmx}")
         print(f"prominence = {prominence}, distance to next peak = {distance}")
@@ -505,6 +494,7 @@ class FkTkApp:
     def get_sipm_s2_window(self):
         """
         Get SiPMs in S2 window(s)
+
         """
         self.SIPMW = get_s2_windows(self.sipmrbwf, self.ps2)
 
@@ -522,7 +512,10 @@ class FkTkApp:
     def get_sipm_s2_window_sum(self):
         """
         Sum the signals of SiPMs in the windows (with a threshold) 
+
         """
+
+        self.update_parameters_from_entries()
 
         thr = self.parameters["thr_sipm_s2_pes"]
         self.QSIPM = s2_windows_sum(self.SIPMW, thr)
@@ -681,10 +674,11 @@ class FkTkApp:
         Print current parameters
         """
 
-        self._update_parameters_from_entries()
+        self.update_parameters_from_entries()
+
         msg = "\n".join([f"{k}: {v}" for k, v in self.parameters.items()])
-        print("Current Parameters:\n" + msg)
-        #messagebox.showinfo("Current Parameters", msg)
+        #print("Current Parameters:\n" + msg)
+        messagebox.showinfo("Current Parameters", msg)
 
 
     def plot_data(self):
@@ -704,14 +698,65 @@ class FkTkApp:
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
 
-    def show_parameters(self):
+    # def show_parameters(self):
+    #     """
+    #     Fetch the current values from each Entry widget
+    #     and display them (converted to float or int if possible).
+
+    #     """
+    #     self.update_parameters_from_entries()
+    #     print(self.parameters)
+
+    
+    def update_parameters_from_run(self):
+        """
+        Update the parameters from fixed values for specific runs
+
+        """
+        if self.wf.run_number == 14643:
+            self.parameters = fkr_pars_run_1463
+        else:
+            self.parameters = fkr_pars
+        
+        self.update_entries_from_parameters()
+
+
+    def update_entries_from_parameters(self):
+        """
+        Update the entries in the dialog from the stored parameters
+
+        """
+        PARS = []
+        VALS = []
+        
+        for (param, value) in self.parameters.items():
+            PARS.append(param)
+            VALS.append(value)
+
+        ip = 0
+        for i in range(self.nr):
+            k=0
+            for j in range(self.nc):
+                if ip < len(PARS):
+                    label = tk.Label(self.param_frame, text= PARS[ip])
+                    label.grid(row=i, column=j+k, sticky="e", padx=5, pady=2)
+                
+                    entry = tk.Entry(self.param_frame, width=10)
+                    entry.insert(0, str(VALS[ip]))
+                    entry.grid(row=i, column=j+k+ 1, sticky="w", padx=5, pady=2)
+                    self.entries[PARS[ip]] = entry
+                    k = k+1
+                ip+=1
+
+
+    def update_parameters_from_entries(self):
         """
         Fetch the current values from each Entry widget
         and display them (converted to float or int if possible).
 
         """
-        updated_parameters = {}
-        for param_name, entry_widget in self.param_entries.items():
+
+        for param_name, entry_widget in self.entries.items():
             raw_value = entry_widget.get()
             # Attempt to convert to float or int; fallback to string if it fails
             try:
@@ -721,24 +766,8 @@ class FkTkApp:
                     value = int(raw_value)
             except ValueError:
                 value = raw_value
-            updated_parameters[param_name] = value
-            print(updated_parameters)
-
-
-    def _update_parameters_from_entries(self):
-        for param, entry in self.entries.items():
-            val = entry.get()
-            # Attempt numeric conversion
-            try:
-                if '.' in val:
-                    val = float(val)
-                else:
-                    val = int(val)
-            except ValueError:
-                # Keep as string if conversion fails
-                pass
-            self.parameters[param] = val
-
+            self.parameters[param_name] = value
+            
 
 if __name__ == "__main__":
     root = tk.Tk()
