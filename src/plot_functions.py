@@ -70,7 +70,7 @@ def plot_sum_waveform_tk(axs, siwf, cwf, n_timesi_bins, n_time_bins, run_number,
     
     
 def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[], left_ips=[], right_ips=[], 
-                  figsize=(18, 6), tbin=25e-3, sigma=2): 
+                  tbin=25e-3, sigma=2, energies=[], figsize=(18, 6)): 
     
     """
     Plot a waveform. Optionaly mark the position of peaks
@@ -79,25 +79,29 @@ def plot_waveform(wvf, n_time_bins, run_number, event_number, peaks=[], widths=[
     fig, axs = plt.subplots(1, 1, figsize=figsize)
 
     plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number, 
-                     peaks, widths, left_ips, right_ips, tbin)
+                     peaks, widths, left_ips, right_ips, tbin, sigma, energies, )
     fig.tight_layout()
 
 
 def plot_waveform_tk(axs, wvf, n_time_bins, run_number, event_number, 
-                     peaks, widths, left_ips, right_ips, tbin, sigma=2): 
+                     peaks, widths, left_ips, right_ips, tbin,  sigma=2, energies=[]): 
     
-    label=f"evt={event_number} run={run_number}"
+    label=f"evt={event_number} run={run_number}\n"
     
     time = np.linspace(0, n_time_bins * tbin, n_time_bins)
- 
-    axs.plot(time, wvf, label=label, color="blue")
-    
-    for i, pk in enumerate(peaks):
+     
+    for i, _ in enumerate(peaks):
+        label+=f"peak number {i}\n"
         lcut = tbin * (left_ips[i] -  sigma * widths[i])
         rcut = tbin * (right_ips[i] +  sigma * widths[i])
-        print(f"left cut = {lcut}, right cut = {rcut}")
+        #label+=f"left cut = {lcut:.2f}, right cut = {rcut:.2f}\n"
+        if energies[i] > 0:
+            label+=f"energy = {energies[i]:.2f} pes width = {widths[i] * tbin:.2f} mus\n"
+        print(label)
         axs.axvline(lcut, color='red', linestyle='--', linewidth=2)
         axs.axvline(rcut, color='red', linestyle='--', linewidth=2)
+    
+    axs.plot(time, wvf, label=label, color="blue")
 
     axs.set_title("Waveform")
     axs.set_xlabel("Time [μs]")

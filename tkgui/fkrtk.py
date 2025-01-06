@@ -461,7 +461,8 @@ class FkTkApp:
         self.ps2 = find_peak_params(self.cwf_s2, self.st2.istmn, self.st2.istmx, prominence, distance)
         print_peak_pars(self.ps2, self.tbins2)
 
-        print(f"Energy of S2 = {s12_energy(self.cwf_s2, self.ps2)} pes")
+        self.es2 = s12_energy(self.cwf_s2, self.ps2)
+        print(f"Energy of S2 = {self.es2} pes")
 
         self.plot_s2_wvfm()
         # activate buttom to search SiPMs on window S2
@@ -495,7 +496,8 @@ class FkTkApp:
         self.ps1 = find_peak_params(self.cwf_s1, self.st1.istmn, self.st1.istmx, prominence, distance)
         print_peak_pars(self.ps1, self.tbins1)
 
-        print(f"Energy of S1 = {s12_energy(self.cwf_s1, self.ps1)} pes")
+        self.es1 = s12_energy(self.cwf_s1, self.ps1)
+        print(f"Energy of S1 = {self.es1} pes")
 
         self.plot_s1_wvfm()
 
@@ -576,7 +578,7 @@ class FkTkApp:
         plot_waveform_tk(axs, self.cwf_s2, self.cwf_s2.shape[0], 
                              self.wf.run_number, self.wf.event_number, 
                              self.ps2.peaks, self.ps2.widths, self.ps2.left_ips, self.ps2.right_ips,
-                             tbin=self.tbins2)
+                             tbin=self.tbins2, energies=self.es2)
         
         self.fig.tight_layout() 
         self.canvas_plot.draw()
@@ -598,7 +600,7 @@ class FkTkApp:
         plot_waveform_tk(axs, self.cwf_s1[imn:imx], id,  
                          self.wf.run_number, self.wf.event_number, 
                          self.ps1.peaks, self.ps1.widths, self.ps1.left_ips, self.ps1.right_ips,
-                         tbin=self.tbins1)
+                         tbin=self.tbins1, energies=self.es1)
         
         self.fig.tight_layout() 
         self.canvas_plot.draw()
@@ -630,11 +632,12 @@ class FkTkApp:
         """
         self.fig.clear()
         axs = self.fig.subplots(1, 1)
+        self.ee =np.zeros(len(self.pp.peaks))
 
         plot_waveform_tk(axs, self.cwf_sum_maw, self.sp.pmt_time_bins, 
                              self.wf.run_number, self.wf.event_number, 
                              self.pp.peaks, self.pp.widths, self.pp.left_ips, self.pp.right_ips,
-                             tbin=self.tspmt)
+                             tbin=self.tspmt, energies=self.ee)
         
         self.fig.tight_layout() 
         self.canvas_plot.draw()
@@ -646,9 +649,10 @@ class FkTkApp:
         """
         self.fig.clear()
         axs = self.fig.subplots(1, len(self.pp.peaks))
+       
         plot_waveform_zoom_peaks_tk(axs, self.cwf_sum_maw, self.wf.run_number, self.wf.event_number, 
                                      self.pp.peaks, self.pp.lcuts, self.pp.rcuts, twindows =self.pp.widths, 
-                                     tbin=self.tspmt,
+                                     tbin=self.tspmt, 
                                      tscale=True)
         
         self.fig.tight_layout() 
