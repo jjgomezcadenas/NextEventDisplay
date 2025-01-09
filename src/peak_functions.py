@@ -124,14 +124,14 @@ def get_s2_windows(sipmwf, ps):
     
     ipl = ps.lcuts
     ipr = ps.rcuts
-    print(ipl, ipr)
+    #print(ipl, ipr)
     
     for i in range(len(ipl)):
         sipmw = sipmwf[:,ipl[i]:ipr[i]]
         
-        print(f"peak number = {i}")
-        print(f"ipl = {ipl[i]}, ipr={ipr[i]}")
-        print(f"sipm window shape {sipmw.shape}")
+        #print(f"peak number = {i}")
+        #print(f"ipl = {ipl[i]}, ipr={ipr[i]}")
+        #print(f"sipm window shape {sipmw.shape}")
         SIPMW.append(sipmw)
     return SIPMW
 
@@ -147,10 +147,10 @@ def get_sipm_max(QSIPM):
         max_value = np.max(qsipm)
         max_index = np.argmax(qsipm)
         
-        print(f"Sipm: Window = {i}")
+        #print(f"Sipm: Window = {i}")
 
-        print("Max value:", max_value)
-        print("Index of max value:", max_index)
+        #print("Max value:", max_value)
+        #print("Index of max value:", max_index)
         MX.append((max_index,max_value))
     
     return MX
@@ -170,7 +170,7 @@ def sipm_xg(XSi, YSi, QSIPM):
     for i in range(len(QSIPM)):
         xsi = np.sum(XSi * QSIPM[i])/np.sum(QSIPM[i])
         ysi = np.sum(YSi * QSIPM[i])/np.sum(QSIPM[i])
-        print(f"xsi = {xsi}, ysi = {ysi}")
+        #print(f"xsi = {xsi}, ysi = {ysi}")
         XG.append(xsi)
         YG.append(ysi)
     return XG,YG

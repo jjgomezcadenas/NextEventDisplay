@@ -22,13 +22,6 @@ import sys
 module_dir = os.path.abspath('../src')  
 sys.path.append(module_dir)
 
-#import tables as tb
-#import pandas as pd
-import matplotlib.pyplot as plt
-#from   matplotlib.colors import LogNorm
-#import matplotlib.gridspec as gridspec
-import numpy as np
-
 
 from irene_params import fkr_globs, fkr_pars, fkr_pars_run_1463, masked_sipm
 #import irene_params as irp

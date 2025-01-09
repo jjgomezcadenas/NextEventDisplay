@@ -68,7 +68,7 @@ fkr_globs = {"detector_db": "next100",
 fkr_pars = {
     "glow_peak_prominence": 1000, 
     "glow_peak_distance": 20,
-    "s2_peak_prominence": 100, 
+    "s2_peak_prominence": 20, 
     "s2_peak_distance" : 20,
     "s1_peak_prominence": 10, 
     "s1_peak_distance" : 10,

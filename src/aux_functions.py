@@ -104,7 +104,7 @@ def load_waveforms(wfdct):
     run_number = wfdct["run_number"]
     event_number = wfdct["event_number"]
     
-    print(f"run_number = {run_number}, event_number = {event_number}")
+    # print(f"run_number = {run_number}, event_number = {event_number}")
 
     num_pmts=        pmtrwf.shape[0]
     num_sipms =      sipmrwf.shape[0]
@@ -112,9 +112,9 @@ def load_waveforms(wfdct):
     sipm_time_bins = sipmrwf.shape[1]
     n_baseline =     int(0.9 * time_bins)
                                 
-    print(f"number of PMTs = {num_pmts}, number of PMT time bins = {time_bins}")
-    print(f"number of SiPM = {num_sipms}, number of SiPMs time bins = {sipm_time_bins}")
-    print(f"n_baseline = {n_baseline}")
+    #print(f"number of PMTs = {num_pmts}, number of PMT time bins = {time_bins}")
+    #print(f"number of SiPM = {num_sipms}, number of SiPMs time bins = {sipm_time_bins}")
+    #print(f"n_baseline = {n_baseline}")
 
     wf = Waveforms(run_number, event_number, n_baseline, pmtrwf, sipmrwf)
     sp = SensorPars(time_bins, num_pmts, sipm_time_bins, num_sipms)
